@@ -160,6 +160,35 @@ In `train.sh`, the model can be selected by changing the hyperparameters `MODEL`
 | Dinov2          | dinov2_vitl14            | dinov2_vitl14_pretrain.pth   | ~300M                    |
 | Dinov2          | dinov2_vitg14            | dinov2_vitg14_pretrain.pth   | ~1.1B                    |
 
+### 🧠 Multi-task fine-tuning with Excel annotations
+
+For datasets where all images live inside a single folder and the task labels are stored in an Excel sheet, you can fine-tune
+RETFound for multiple related predictions with the `multitask_finetune.py` script introduced in this repository.
+
+1. Place all images inside a directory such as `./TRS-Image`.
+2. Create an Excel file containing the following columns (one row per image):
+   - `image_id`: the file name without extension (e.g. `anhuayi_QD_01`).
+   - `diagnosis`: categorical value encoded as 0=正常, 1=PACG, 2=APAC, 3=POAG, 4=继发性G.
+   - `md_stage`: 1=≥-6, 2=-6~-12, 3=< -12.
+   - `vfi_grade`: 1=80-100%, 2=60-80%, 3=40-60%, 4=20-40%, 5=0-20%.
+   - `ght_class`: 0=正常, 1=异常, 2=边缘, 3=普遍敏感性下降.
+   If the Excel file omits the image extension, provide it via `--image-ext` (for example `--image-ext .png`).
+
+Run the multi-task trainer:
+
+```bash
+python multitask_finetune.py \
+  --images-dir ./TRS-Image \
+  --annotations labels.xlsx \
+  --finetune /path/to/RETFound_mae_natureCFP.pth \
+  --output-dir ./multitask_output \
+  --batch-size 16 --epochs 50
+```
+
+The script splits the data into train/validation/test subsets, fine-tunes RETFound with four classification heads, and produces
+`training_history.json`, `best_model.pth`, and detailed evaluation metrics (`test_metrics.json`, `test_predictions.csv`) in the
+output directory.
+
 
 Change the DATA_PATH to your dataset directory.
 
